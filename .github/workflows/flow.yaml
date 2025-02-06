@@ -2,9 +2,10 @@ name: flow
 on:
   workflow_call:
     inputs:
-      config-yaml:
+      config:
         type: string
-      containr-image:
+        description: config yaml
+      image:
         type: string
         required: true
       build-group:
@@ -22,6 +23,9 @@ jobs:
   build:
     runs-on: ${{ inputs.build-group }}
     steps:
+      # login to setup creds registry, this will place creds in ~/.docker/config.json
+      # so will need to share via volume to running container...
+      #
       - run: echo ${{ inputs.registry-pass }} | docker login -u ${{ inputs.registry-user }} --password-stdin
         if: ${{ inputs.registry-user }} && ${{ inputs.registry-pass }}
 
