@@ -1,0 +1,47 @@
+name: flow
+on:
+  workflow_call:
+    inputs:
+      config-yaml:
+        type: string
+      containr-image:
+        type: string
+        required: true
+      build-group:
+        type: string
+        default: ubuntu-latest
+      registry-user:
+        type: string
+      registry-pass:
+        type: string
+
+env:
+  sock: /var/run/docker.sock
+
+jobs:
+  build:
+    runs-on: ${{ inputs.build-group }}
+    steps:
+      - run: echo ${{ inputs.registry-pass }} | docker login -u ${{ inputs.registry-user }} --password-stdin
+        if: ${{ inputs.registry-user }} && ${{ inputs.registry-pass }}
+
+      # required for called container to use docker
+      #
+      - run: sudo chmod o+rw ${sock}
+
+      # run container with oci push logic
+      #
+      - run: |
+          _cfg=$(pwd)/${{ inputs.config-yaml }}
+          docker run --rm \
+            -u $(id -u) -e HOME=${HOME}\
+            -v $(pwd):$(pwd) -w $(pwd) \
+            -v ${_cfg}:${_cfg} -e CONFIGR_YAML=${_cfg} \
+            -v ${sock}:${sock} \
+            -e DEBUG=dbg:* \
+            ${{ inputs.containr-image }}
+
+      # docker logout to clean up creds for safe measure
+      #
+      - run: docker logout
+        if: ${{ inputs.registry-user }} && ${{ inputs.registry-pass }}
