@@ -23,6 +23,12 @@ jobs:
   build:
     runs-on: ${{ inputs.build-group }}
     steps:
+      # if caller already called checkout, and this nested one creates undesirable latency
+      # or other complications since i think it clears the working directory prior to checkout
+      # it's possible to avoid this one here with use of cache at caller and uncache here,
+      # but skipping that complexity for now...
+      #
+      - uses: actions/checkout@v3
       # login to setup creds registry, this will place creds in ~/.docker/config.json
       # so will need to share via volume to running container...
       #
