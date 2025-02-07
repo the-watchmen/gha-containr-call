@@ -50,7 +50,7 @@ jobs:
             -v ${_cfg}:${_cfg} -e CONFIGR_YAML=${_cfg} \
             -v ${sock}:${sock} \
             -e DEBUG=dbg:* \
-            ${{ inputs.containr-image }}
+            ${{ inputs.image }}
 
       # docker logout to clean up creds for safe measure
       #
