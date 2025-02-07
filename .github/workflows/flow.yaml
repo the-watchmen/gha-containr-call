@@ -43,7 +43,7 @@ jobs:
       # run container with oci push logic
       #
       - run: |
-          _cfg=$(pwd)/${{ inputs.config-yaml }}
+          _cfg=$(pwd)/${{ inputs.config }}
           docker run --rm \
             -u $(id -u) -e HOME=${HOME}\
             -v $(pwd):$(pwd) -w $(pwd) \
