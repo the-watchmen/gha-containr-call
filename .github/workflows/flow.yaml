@@ -13,6 +13,12 @@ on:
         default: ubuntu-latest
       registry-user:
         type: string
+      output:
+        type: string
+        default: output.yaml
+      debug:
+        type: string
+        default: dbg:*
     secrets:
       registry-pass: {}
 
@@ -45,11 +51,12 @@ jobs:
       - run: |
           _cfg=$(pwd)/${{ inputs.config }}
           docker run --rm \
-            -u $(id -u) -e HOME=${HOME}\
+            -u $(id -u) -e HOME=${HOME} \
             -v $(pwd):$(pwd) -w $(pwd) \
             -v ${_cfg}:${_cfg} -e CONFIGR_YAML=${_cfg} \
             -v ${sock}:${sock} \
-            -e DEBUG=dbg:* \
+            -e DEBUG=${{ inputs.debug }} \
+            -e OUTPUT=${{ inputs.output }} \
             ${{ inputs.image }}
 
       # docker logout to clean up creds for safe measure
