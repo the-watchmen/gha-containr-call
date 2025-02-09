@@ -13,22 +13,25 @@ on:
         default: ubuntu-latest
       registry-user:
         type: string
-      output:
-        type: string
-        default: output.yaml
       debug:
         type: string
         default: dbg:*
     secrets:
       registry-pass: {}
+    outputs:
+      json:
+        value: ${{ jobs.run.outputs.json }}
 
 env:
   sock: /var/run/docker.sock
   pass: ${{ secrets.registry-pass }}
+  out: out.json
 
 jobs:
-  build:
+  run:
     runs-on: ${{ inputs.build-group }}
+    outputs:
+      json: ${{ steps.out.outputs.json }}
     steps:
       # if caller already called checkout, and this nested one creates undesirable latency
       # or other complications since i think it clears the working directory prior to checkout
@@ -56,8 +59,13 @@ jobs:
             -v ${_cfg}:${_cfg} -e CONFIGR_YAML=${_cfg} \
             -v ${sock}:${sock} \
             -e DEBUG=${{ inputs.debug }} \
-            -e OUTPUT=${{ inputs.output }} \
+            -e OUTPUT=${out} \
             ${{ inputs.image }}
+      - id: out
+        run: |
+          cat ${out}
+          echo "json=$(cat ${out})" >> ${GITHUB_OUTPUT}
+          cat ${GITHUB_OUTPUT}
 
       # docker logout to clean up creds for safe measure
       #
