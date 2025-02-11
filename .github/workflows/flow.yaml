@@ -58,8 +58,8 @@ jobs:
           config=${{ inputs.config }}
           format=${{ inputs.format }}
           #
-          if [-n "${config}"]; then
-            if [-n "${format}"]; then
+          if [ -n "${config}" ]; then
+            if [ -n "${format}" ]; then
               _config="-e CONFIGR_INPUT=${config} -e CONFIGR_FORMAT=${format}"
             else
               config=$(pwd)/${config}
