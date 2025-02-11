@@ -4,7 +4,10 @@ on:
     inputs:
       config:
         type: string
-        description: config yaml
+        description: name of file containing config or config data itself
+      config-format:
+        type: string
+        description: json or yaml, only specify when passing raw data in config input
       image:
         type: string
         required: true
@@ -52,11 +55,24 @@ jobs:
       # run container with oci push logic
       #
       - run: |
-          _cfg=$(pwd)/${{ inputs.config }}
+          config=${{ inputs.config }}
+          format=${{ inputs.format }}
+          #
+          if [-n "${config}"]; then
+            if [-n "${format}"]; then
+              _config="-e CONFIGR_INPUT=${config} -e CONFIGR_FORMAT=${format}"
+            else
+              config=$(pwd)/${config}
+              _config="-v ${config}:${config} -e CONFIGR_INPUT=${config}"
+            fi
+          fi
+          #
+          echo "_config=${_config}"
+          #
           docker run --rm \
             -u $(id -u) -e HOME=${HOME} \
             -v $(pwd):$(pwd) -w $(pwd) \
-            -v ${_cfg}:${_cfg} -e CONFIGR_YAML=${_cfg} \
+            ${_config} \
             -v ${sock}:${sock} \
             -e DEBUG=${{ inputs.debug }} \
             -e OUTPUT=${out} \
