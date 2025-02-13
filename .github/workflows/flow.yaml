@@ -56,7 +56,7 @@ jobs:
       #
       - run: |
           config=${{ inputs.config }}
-          format=${{ inputs.format }}
+          format=${{ inputs.config-format }}
           #
           if [ -n "${config}" ]; then
             if [ -n "${format}" ]; then
