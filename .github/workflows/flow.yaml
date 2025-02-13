@@ -55,14 +55,14 @@ jobs:
       # run container with oci push logic
       #
       - run: |
-          #config=${{ inputs.config }}
-          # oh the pain of bash quote gobbling :)
-          #
-          config=$(echo ${config} | sed 's/\x22/\\"/g')
+          config=${{ inputs.config }}
           format=${{ inputs.config-format }}
           #
           if [ -n "${config}" ]; then
             if [ -n "${format}" ]; then
+              # oh the pain of bash quote gobbling :)
+              #
+              config=$(echo ${config} | sed 's/\x22/\\"/g')
               _config="-e CONFIGR_INPUT=${config} -e CONFIGR_FORMAT=${format}"
             else
               config=$(pwd)/${config}
