@@ -46,7 +46,7 @@ jobs:
       # so will need to share via volume to running container...
       #
       - run: echo ${pass} | docker login -u ${{ inputs.registry-user }} --password-stdin
-        if: ${{ inputs.registry-user }} && ${pass}
+        if: ${{ inputs.registry-user }}
 
       # required for called container to use docker
       #
@@ -85,4 +85,4 @@ jobs:
       # docker logout to clean up creds for safe measure
       #
       - run: docker logout
-        if: ${{ inputs.registry-user }} && ${pass}
+        if: ${{ inputs.registry-user }}
