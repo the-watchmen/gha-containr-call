@@ -55,12 +55,12 @@ jobs:
       # run container with oci push logic
       #
       - run: |
-          config=$(printf %q ${{ inputs.config }})
+          config=${{ inputs.config }}
           format=${{ inputs.config-format }}
           #
           if [ -n "${config}" ]; then
             if [ -n "${format}" ]; then
-              _config="-e CONFIGR_INPUT=${config} -e CONFIGR_FORMAT=${format}"
+              _config="-e CONFIGR_INPUT=$(printf %q ${config}) -e CONFIGR_FORMAT=${format}"
             else
               config=$(pwd)/${config}
               _config="-v ${config}:${config} -e CONFIGR_INPUT=${config}"
