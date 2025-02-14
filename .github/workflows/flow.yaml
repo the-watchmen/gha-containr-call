@@ -55,14 +55,13 @@ jobs:
       # run container with oci push logic
       #
       - run: |
+          # single quotes required here when config is json
+          #
           config='${{ inputs.config }}'
           format=${{ inputs.config-format }}
           #
           if [ -n "${config}" ]; then
             if [ -n "${format}" ]; then
-              # oh the pain of bash quote gobbling :)
-              #
-              # config=$(echo ${config} | sed 's/\x22/\\"/g')
               _config="-e CONFIGR_INPUT=${config} -e CONFIGR_FORMAT=${format}"
             else
               config=$(pwd)/${config}
@@ -72,14 +71,21 @@ jobs:
           #
           echo "_config=${_config}"
           #
-          docker run --rm \
+          cmd="\
+            docker run --rm \
             -u $(id -u) -e HOME=${HOME} \
             -v $(pwd):$(pwd) -w $(pwd) \
             ${_config} \
             -v ${sock}:${sock} \
             -e DEBUG=${{ inputs.debug }} \
             -e OUTPUT=${out} \
-            ${{ inputs.image }}
+            ${{ inputs.image }} \
+            "
+          #
+          echo "cmd=${cmd}"
+          #
+          ${cmd}
+
       - id: out
         run: |
           echo "json=$(cat ${out})" >> ${GITHUB_OUTPUT}
