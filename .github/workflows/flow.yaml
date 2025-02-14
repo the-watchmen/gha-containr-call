@@ -89,8 +89,14 @@ jobs:
 
       - id: out
         run: |
-          echo "json=$(cat ${out})" >> ${GITHUB_OUTPUT}
-          cat ${GITHUB_OUTPUT}
+          if [ -f ${out} ]; then
+            key=json
+            echo "output=${out} exists, placing in gha output at key=${key}"
+            echo "${key}=$(cat ${out})" >> ${GITHUB_OUTPUT}
+            cat ${GITHUB_OUTPUT}
+          else
+            echo "output=${out} not found, ignoring..."
+          fi
 
       # docker logout to clean up creds for safe measure
       #
