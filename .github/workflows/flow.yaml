@@ -75,6 +75,7 @@ jobs:
             docker run --rm \
             -u $(id -u) -e HOME=${HOME} \
             -v $(pwd):$(pwd) -w $(pwd) \
+            -v /tmp:/tmp \
             ${_config} \
             -v ${sock}:${sock} \
             -e DEBUG=${{ inputs.debug }} \
