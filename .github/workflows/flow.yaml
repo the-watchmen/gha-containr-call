@@ -74,7 +74,11 @@ jobs:
           credsPath=${HOME}/${dockerDir}/${creds}
           if [ -f ${credsPath} ]; then
             echo "docker creds found passing to docker run"
-            volCredsDir=$(pwd)/_vol/home/${dockerDir}
+
+            # entering grey area of breaking out of work dir with use of .. here
+            # but trying to avoid placing info like creds in work dir to avoid accidental propagation
+            #
+            volCredsDir=$(pwd)/../_vol/home/${dockerDir}
             mkdir -p ${volCredsDir}
             cp ${credsPath} ${volCredsDir}
             volCreds=${volCredsDir}/${creds}
