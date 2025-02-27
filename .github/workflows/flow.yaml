@@ -78,6 +78,7 @@ jobs:
             mkdir -p ${volCredsDir}
             cp ${credsPath} ${volCredsDir}
             volCreds=${volCredsDir}/${creds}
+            ls -la ${volCreds}
             _creds="-e REGISTRY_CREDS=${volCreds} -v ${volCreds}:${credsPath}"
           else
             echo "docker creds not found"
