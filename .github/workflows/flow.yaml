@@ -69,14 +69,26 @@ jobs:
             fi
           fi
           #
-          echo "_config=${_config}"
+          creds=config.json
+          dockerDir=.docker
+          credsPath=${HOME}/${dockerDir}/${creds}
+          if [ -f ${credsPath} ]; then
+            echo "docker creds found passing to docker run"
+            volCredsDir=$(pwd)/_vol/home/${dockerDir}
+            mkdir -p ${volCredsDir}
+            cp ${creds} ${volCredsDir}
+            volCreds=${volCredsDir}/${creds}
+            _creds="-e REGISTRY_CREDS=${volCreds} -v ${volCreds}:${credsPath}"
+          else
+            echo "docker creds not found"
+          fi
           #
           cmd="\
             docker run --rm \
             -u $(id -u) -e HOME=${HOME} \
             -v $(pwd):$(pwd) -w $(pwd) \
-            -v /tmp:/tmp \
             ${_config} \
+            ${_creds} \
             -v ${sock}:${sock} \
             -e DEBUG=${{ inputs.debug }} \
             -e OUTPUT=${out} \
