@@ -76,7 +76,7 @@ jobs:
             echo "docker creds found passing to docker run"
             volCredsDir=$(pwd)/_vol/home/${dockerDir}
             mkdir -p ${volCredsDir}
-            cp ${creds} ${volCredsDir}
+            cp ${credsPath} ${volCredsDir}
             volCreds=${volCredsDir}/${creds}
             _creds="-e REGISTRY_CREDS=${volCreds} -v ${volCreds}:${credsPath}"
           else
