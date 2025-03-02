@@ -102,6 +102,7 @@ jobs:
           #
           volRootDir=${volDir}/tmp/containr/work
           mkdir -p ${volRootDir}
+          ls -la ${volRootDir}
           work="-e CONTAINR_HOST_ROOT=${volRootDir} -v ${volRootDir}:/tmp/containr/work"
           #
           # finally, the docker-run command
