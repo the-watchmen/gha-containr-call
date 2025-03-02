@@ -29,6 +29,7 @@ env:
   sock: /var/run/docker.sock
   pass: ${{ secrets.registry-pass }}
   out: out.json
+  sep: "-----"
 
 jobs:
   run:
@@ -76,6 +77,13 @@ jobs:
           # local volume folder
           #
           volDir=$(pwd)/../_vol
+          mkdir -p ${volDir}
+          cmd="ls -la ${volDir}"
+          #
+          echo ${sep}
+          echo ${cmd}
+          ${cmd}
+          echo ${sep}
           #
           # account for docker-creds
           #
@@ -104,8 +112,11 @@ jobs:
           mkdir -p ${volRootDir}
           #
           cmd="ls -la ${volRootDir}"
+          #
+          echo ${sep}
           echo ${cmd}
           ${cmd}
+          echo ${sep}
           #
           work="-e CONTAINR_HOST_ROOT=${volRootDir} -v ${volRootDir}:/tmp/containr/work"
           #
@@ -124,9 +135,10 @@ jobs:
             ${{ inputs.image }} \
             "
           #
+          echo ${sep}
           echo "cmd=${cmd}"
-          #
           ${cmd}
+          echo ${sep}
 
       - name: output
         id: out
