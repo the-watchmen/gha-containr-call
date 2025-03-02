@@ -83,7 +83,6 @@ jobs:
           echo ${sep}
           echo ${cmd}
           ${cmd}
-          echo ${sep}
           #
           # account for docker-creds
           #
@@ -106,17 +105,17 @@ jobs:
             echo "docker creds not found"
           fi
           #
-          # account for /tmp
+          # account for work folder
           #
           volRootDir=${volDir}/tmp/containr/work
           mkdir -p ${volRootDir}
+          chmod 777 ${volRootDir}
           #
           cmd="ls -la ${volRootDir}"
           #
           echo ${sep}
           echo ${cmd}
           ${cmd}
-          echo ${sep}
           #
           work="-e CONTAINR_HOST_ROOT=${volRootDir} -v ${volRootDir}:/tmp/containr/work"
           #
@@ -138,7 +137,6 @@ jobs:
           echo ${sep}
           echo "cmd=${cmd}"
           ${cmd}
-          echo ${sep}
 
       - name: output
         id: out
