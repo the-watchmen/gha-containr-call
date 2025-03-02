@@ -11,7 +11,7 @@ on:
       image:
         type: string
         required: true
-      build-group:
+      runs-on:
         type: string
         default: ubuntu-latest
       registry-user:
@@ -32,7 +32,7 @@ env:
 
 jobs:
   run:
-    runs-on: ${{ inputs.build-group }}
+    runs-on: ${{ inputs.runs-on }}
     outputs:
       json: ${{ steps.out.outputs.json }}
     steps:
@@ -41,20 +41,24 @@ jobs:
       # it's possible to avoid this one here with use of cache at caller and uncache here,
       # but skipping that complexity for now...
       #
-      - uses: actions/checkout@v3
+      - name: checkout
+        uses: actions/checkout@v3
       # login to setup creds registry, this will place creds in ~/.docker/config.json
       # so will need to share via volume to running container...
       #
-      - run: echo ${pass} | docker login -u ${{ inputs.registry-user }} --password-stdin
+      - name: docker-login
+        run: echo ${pass} | docker login -u ${{ inputs.registry-user }} --password-stdin
         if: ${{ inputs.registry-user }}
 
       # required for called container to use docker
       #
-      - run: sudo chmod o+rw ${sock}
+      - name: chmod-sock
+        run: sudo chmod o+rw ${sock}
 
       # run container with oci push logic
       #
-      - run: |
+      - name: docker-run
+        run: |
           # single quotes required here when config is json
           #
           config='${{ inputs.config }}'
@@ -69,6 +73,12 @@ jobs:
             fi
           fi
           #
+          # local volume folder
+          #
+          volDir=$(pwd)/../_vol
+          #
+          # account for docker-creds
+          #
           creds=config.json
           dockerDir=.docker
           credsPath=${HOME}/${dockerDir}/${creds}
@@ -78,7 +88,7 @@ jobs:
             # entering grey area of breaking out of work dir with use of .. here
             # but trying to avoid placing info like creds in work dir to avoid accidental propagation
             #
-            volCredsDir=$(pwd)/../_vol/home/${dockerDir}
+            volCredsDir=${volDir}/home/${dockerDir}
             mkdir -p ${volCredsDir}
             cp ${credsPath} ${volCredsDir}
             volCreds=${volCredsDir}/${creds}
@@ -88,12 +98,21 @@ jobs:
             echo "docker creds not found"
           fi
           #
+          # account for /tmp
+          #
+          volRootDir=${volDir}/tmp/containr/work
+          mkdir -p ${volRootDir}
+          work="-e CONTAINR_HOST_ROOT=${volRootDir} -v ${volRootDir}:/tmp/containr/work"
+          #
+          # finally, the docker-run command
+          #
           cmd="\
             docker run --rm \
             -u $(id -u) -e HOME=${HOME} \
             -v $(pwd):$(pwd) -w $(pwd) \
             ${_config} \
             ${_creds} \
+            ${work} \
             -v ${sock}:${sock} \
             -e DEBUG=${{ inputs.debug }} \
             -e OUTPUT=${out} \
@@ -104,7 +123,8 @@ jobs:
           #
           ${cmd}
 
-      - id: out
+      - name: output
+        id: out
         run: |
           if [ -f ${out} ]; then
             key=json
@@ -117,5 +137,6 @@ jobs:
 
       # docker logout to clean up creds for safe measure
       #
-      - run: docker logout
+      - name: docker-logout
+        run: docker logout
         if: ${{ inputs.registry-user }}
