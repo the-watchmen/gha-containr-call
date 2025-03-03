@@ -60,9 +60,38 @@ jobs:
       #
       - name: docker-run
         run: |
-          # in-container mount point for working directory
+          #####
           #
-          cwork=/tmp/containr/work
+          # vars for host (h) and container (c) volume mounts
+          #
+          cRoot=/tmp/containr
+          cWork=${cRoot}/work
+          cIo=${cRoot}/io
+          #
+          hRoot=$(pwd)
+          hVol=${hRoot}/../_vol
+          mkdir -p ${hVol}
+          echo ${sep}
+          echo "set up host volume folder=${hVol}"
+          ls -la ${hVol}
+          #
+          # strategy:
+          # if is-checkout will use current-working-directory for work,
+          # otherwise will mount empty folder for work
+          #
+          echo ${sep}
+          if [ "${{ inputs.is-checkout }}" = 'true' ]; then
+            hWork=${hRoot}
+            echo "using cwd=${hWork} as work"
+            isCwdWork=1
+          else
+            hWork=${hVol}/work
+            mkdir -p ${hWork}
+            echo "using new folder=${hWork} as work"
+          fi
+          ls -la ${hWork}
+          #
+          #####
           #
           # single quotes required here when config is json
           #
@@ -71,23 +100,15 @@ jobs:
           #
           if [ -n "${config}" ]; then
             if [ -n "${format}" ]; then
+              # using variable for config (eg json) v file so no mounts required
+              #
               _config="-e CONFIGR_INPUT=${config} -e CONFIGR_FORMAT=${format}"
             else
-              hconfig=$(pwd)/${config}
-              cconfig=${cwork}/${config}
-              _config="-v ${hconfig}:${cconfig} -e CONFIGR_INPUT=${cconfig}"
+              hConfig=${hRoot}/${config}
+              cConfig=${cIo}/${config}
+              _config="-v ${hConfig}:${cConfig} -e CONFIGR_INPUT=${cConfig}"
             fi
           fi
-          #
-          # local volume folder
-          #
-          volDir=$(pwd)/../_vol
-          mkdir -p ${volDir}
-          cmd="ls -la ${volDir}"
-          #
-          echo ${sep}
-          echo ${cmd}
-          ${cmd}
           #
           # account for docker-creds
           #
@@ -97,35 +118,19 @@ jobs:
           echo ${sep}
           if [ -f ${credsPath} ]; then
             echo "docker creds found passing to docker run"
-
-            # entering grey area of breaking out of work dir with use of .. here
-            # but trying to avoid placing info like creds in work dir to avoid accidental propagation
-            #
-            volCredsDir=${volDir}/home/${dockerDir}
-            mkdir -p ${volCredsDir}
-            cp ${credsPath} ${volCredsDir}
-            volCreds=${volCredsDir}/${creds}
-            ls -la ${volCreds}
-            _creds="-e REGISTRY_CREDS=${volCreds} -v ${volCreds}:${credsPath}"
+            hCredsDir=${hVol}/home/${dockerDir}
+            mkdir -p ${hCredsDir}
+            cp ${credsPath} ${hCredsDir}
+            hCreds=${hCredsDir}/${creds}
+            ls -la ${hCreds}
+            _creds="-e REGISTRY_CREDS=${hCreds} -v ${hCreds}:${credsPath}"
           else
             echo "docker creds not found"
           fi
           #
-          # current strategy:
-          # if is-checkout will use current-working-directory for work,
-          # otherwise will mount empty folder for work
+          # volume mounts for work
           #
-          echo ${sep}
-          cwork=/tmp/containr/work
-          if [ "${{ inputs.is-checkout }}" == "true" ]; then
-            work=$(pwd)
-            echo "is-checkout, setting work=${work}"
-          else
-            work=${volDir}${cwork}
-            echo "is-not-checkout, setting work=${work}"
-            mkdir -p ${work}
-          fi            
-          _work="-w ${cwork} -e CONTAINR_WORK_HOST=${work} -v ${work}:${cwork}"
+          _work="-w ${cWork} -e CONTAINR_WORK_HOST=${hWork} -v ${hWork}:${cWork}"
           #
           # finally, the docker-run command
           #
