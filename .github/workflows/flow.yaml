@@ -19,6 +19,9 @@ on:
       debug:
         type: string
         default: dbg:*
+      is-checkout:
+        type: boolean
+        default: true
     secrets:
       registry-pass: {}
     outputs:
@@ -37,13 +40,10 @@ jobs:
     outputs:
       json: ${{ steps.out.outputs.json }}
     steps:
-      # if caller already called checkout, and this nested one creates undesirable latency
-      # or other complications since i think it clears the working directory prior to checkout
-      # it's possible to avoid this one here with use of cache at caller and uncache here,
-      # but skipping that complexity for now...
-      #
       - name: checkout
         uses: actions/checkout@v3
+        if: ${{ inputs.is-checkout }}
+
       # login to setup creds registry, this will place creds in ~/.docker/config.json
       # so will need to share via volume to running container...
       #
@@ -89,6 +89,7 @@ jobs:
           creds=config.json
           dockerDir=.docker
           credsPath=${HOME}/${dockerDir}/${creds}
+          echo ${sep}
           if [ -f ${credsPath} ]; then
             echo "docker creds found passing to docker run"
 
@@ -105,19 +106,32 @@ jobs:
             echo "docker creds not found"
           fi
           #
-          # account for work folder
-          #
-          volRootDir=${volDir}/tmp/containr/work
-          mkdir -p ${volRootDir}
-          chmod 777 ${volRootDir}
-          #
-          cmd="ls -la ${volRootDir}"
+          # current strategy:
+          # if is-checkout will use current-working-directory for work,
+          # otherwise will mount empty folder for work
           #
           echo ${sep}
-          echo ${cmd}
-          ${cmd}
+          if [ "${{ inputs.is-checkout }}" == "true" ]; then
+            work=$(pwd)
+            echo "is-checkout, setting work=${work}"
+          else
+            work=${volDir}/tmp/containr/work
+            echo "is-not-checkout, setting work=${work}"
+            # mkdir -p ${work}
+          fi            
+          _work="-w ${work} -e CONTAINR_WORK_HOST=${work} -v ${work}:/tmp/containr/work"
+
+          #volRootDir=${volDir}/tmp/containr/work
+          #mkdir -p ${volRootDir}
+          #chmod 777 ${volRootDir}
           #
-          work="-e CONTAINR_HOST_ROOT=${volRootDir} -v ${volRootDir}:/tmp/containr/work"
+          #cmd="ls -la ${volRootDir}"
+          #
+          #echo ${sep}
+          #echo ${cmd}
+          #${cmd}
+          #
+          #work="-e CONTAINR_HOST_ROOT=${volRootDir} -v ${volRootDir}:/tmp/containr/work"
           #
           # finally, the docker-run command
           #
@@ -127,7 +141,7 @@ jobs:
             -v $(pwd):$(pwd) -w $(pwd) \
             ${_config} \
             ${_creds} \
-            ${work} \
+            ${_work} \
             -v ${sock}:${sock} \
             -e DEBUG=${{ inputs.debug }} \
             -e OUTPUT=${out} \
