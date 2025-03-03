@@ -73,9 +73,9 @@ jobs:
             if [ -n "${format}" ]; then
               _config="-e CONFIGR_INPUT=${config} -e CONFIGR_FORMAT=${format}"
             else
-              config=$(pwd)/${config}
+              hconfig=$(pwd)/${config}
               cconfig=${cwork}/${config}
-              _config="-v ${config}:${cconfig} -e CONFIGR_INPUT=${cconfig}"
+              _config="-v ${hconfig}:${cconfig} -e CONFIGR_INPUT=${cconfig}"
             fi
           fi
           #
