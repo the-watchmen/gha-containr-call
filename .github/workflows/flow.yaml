@@ -111,27 +111,16 @@ jobs:
           # otherwise will mount empty folder for work
           #
           echo ${sep}
+          cwork=/tmp/containr/work
           if [ "${{ inputs.is-checkout }}" == "true" ]; then
             work=$(pwd)
             echo "is-checkout, setting work=${work}"
           else
-            work=${volDir}/tmp/containr/work
+            work=${volDir}${cwork}
             echo "is-not-checkout, setting work=${work}"
-            # mkdir -p ${work}
+            mkdir -p ${work}
           fi            
-          _work="-w ${work} -e CONTAINR_WORK_HOST=${work} -v ${work}:/tmp/containr/work"
-
-          #volRootDir=${volDir}/tmp/containr/work
-          #mkdir -p ${volRootDir}
-          #chmod 777 ${volRootDir}
-          #
-          #cmd="ls -la ${volRootDir}"
-          #
-          #echo ${sep}
-          #echo ${cmd}
-          #${cmd}
-          #
-          #work="-e CONTAINR_HOST_ROOT=${volRootDir} -v ${volRootDir}:/tmp/containr/work"
+          _work="-w ${cwork} -e CONTAINR_WORK_HOST=${work} -v ${work}:${cwork}"
           #
           # finally, the docker-run command
           #
