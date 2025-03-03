@@ -60,6 +60,10 @@ jobs:
       #
       - name: docker-run
         run: |
+          # in-container mount point for working directory
+          #
+          cwork=/tmp/containr/work
+          #
           # single quotes required here when config is json
           #
           config='${{ inputs.config }}'
@@ -70,7 +74,8 @@ jobs:
               _config="-e CONFIGR_INPUT=${config} -e CONFIGR_FORMAT=${format}"
             else
               config=$(pwd)/${config}
-              _config="-v ${config}:${config} -e CONFIGR_INPUT=${config}"
+              cconfig=${cwork}/${config}
+              _config="-v ${config}:${cconfig} -e CONFIGR_INPUT=${cconfig}"
             fi
           fi
           #
